@@ -27,6 +27,7 @@ let isDrawing = false;
 let x = 0;
 let y = 0;
 
+// code taken from https://developer.mozilla.org/en-US/docs/Web/API/Element/mousemove_event
 canvas.addEventListener("mousedown", (e) => {
     x = e.offsetX;
     y = e.offsetY;
@@ -35,19 +36,20 @@ canvas.addEventListener("mousedown", (e) => {
 
 canvas.addEventListener("mousemove", (e) => {
     if (isDrawing) {
-      drawLine(board, x, y, e.offsetX, e.offsetY);
-      x = e.offsetX;
-      y = e.offsetY;
+        drawLine(board, x, y, e.offsetX, e.offsetY);
+        x = e.offsetX;
+        y = e.offsetY;
     }
 });
 
-globalThis.addEventListener("mouseup", (e) => {
-    drawLine(board, x, y, e.offsetX, e.offsetY);
+canvas.addEventListener("mouseup", (e) => {
+    if (isDrawing) {
+        drawLine(board, x, y, e.offsetX, e.offsetY);
+    }
     x = 0;
     y = 0;
     isDrawing = false;
-  }
-);
+});
 
 function drawLine(board: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) {
     board.beginPath();
@@ -57,12 +59,13 @@ function drawLine(board: CanvasRenderingContext2D, x1: number, y1: number, x2: n
     board.lineTo(x2, y2);
     board.stroke();
     board.closePath();
-}; 
+}
 
 const undoAllButton = document.createElement("button"); 
 undoAllButton.innerHTML = "Undo All Edits"; 
-undoAllButton.style.margin = "25px"
+undoAllButton.style.margin = "25px";
 
+// Brace helped write this code
 undoAllButton.onclick = () => {
     board.clearRect(0, 0, canvas.width, canvas.height);
     board.fillStyle = "#FFFFFF";
