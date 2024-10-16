@@ -1,6 +1,6 @@
 import "./style.css";
 
-const APP_NAME = "Hello Dino!";
+const APP_NAME = "Canvas Crafter 🎨";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
 // document.title = APP_NAME;
@@ -30,15 +30,16 @@ let y = 0;
 
 // Use a single array to track all points. A null value indicates the end of a stroke.
 const points: Array<[number, number] | null> = [];
+const redoStack: Array<[number, number] | null> = [];
 
 // Start drawing on mousedown
 canvas.addEventListener("mousedown", (e) => {
-  x = e.offsetX;
-  y = e.offsetY;
-  isDrawing = true;
-  points.push([x, y]); 
-  drawingChangedEvent();
-  console.log('Array:', points); 
+    x = e.offsetX;
+    y = e.offsetY;
+    isDrawing = true;
+    points.push([x, y]); 
+    redoStack.length = 0; 
+    drawingChangedEvent();
 });
 
 // Track mouse movement while drawing
@@ -65,13 +66,13 @@ canvas.addEventListener("mouseup", () => {
 });
 
 function drawLine(board: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) {
-  board.beginPath(); 
-  board.strokeStyle = "black";
-  board.lineWidth = 1;
-  board.moveTo(x1, y1);
-  board.lineTo(x2, y2);
-  board.stroke();
-  board.closePath();
+    board.beginPath(); 
+    board.strokeStyle = "black";
+    board.lineWidth = 1;
+    board.moveTo(x1, y1);
+    board.lineTo(x2, y2);
+    board.stroke();
+    board.closePath();
 }
 
 function drawingChangedEvent() {
@@ -101,7 +102,7 @@ canvas.addEventListener("drawing-changed", () => {
 
 const undoAllButton = document.createElement("button"); 
 undoAllButton.innerHTML = "Undo All Edits"; 
-undoAllButton.style.margin = "25px";
+undoAllButton.style.margin = "10px";
 
 // Brace helped write this code
 undoAllButton.onclick = () => {
@@ -110,4 +111,37 @@ undoAllButton.onclick = () => {
     board.fillRect(0, 0, canvas.width, canvas.height);
 }
 
+// Went to Bahar's office hours to talk about redoStack and understand it's logic
+// Used Brace to check conditions (whether the lastpoint was null or contained something)
+const undoButton = document.createElement("button");
+undoButton.innerHTML = "Undo Edits";
+undoButton.style.margin = "1px";
+
+undoButton.onclick = () => {
+  if (points.length > 0) {
+    const lastPoint = points.pop(); // delete numbers at the top of the array 
+    if(lastPoint !== undefined){
+        redoStack.push(lastPoint);  
+        drawingChangedEvent();
+    }
+  }
+};
+
+// Similar logic to undoButton 
+const redoButton = document.createElement("button");
+redoButton.innerHTML = "Redo Edits";
+redoButton.style.margin = "10px";
+
+redoButton.onclick = () => {
+  if (redoStack.length > 0) {
+    const redoPoint = redoStack.pop();
+    if (redoPoint !== undefined) {
+      points.push(redoPoint); 
+      drawingChangedEvent();
+    }
+  }
+};
+
 app.append(undoAllButton);
+app.append(undoButton); 
+app.append(redoButton); 
