@@ -47,7 +47,7 @@ h1 {
   text-align: center;
 }
 
-#myCanvas { /* Brace helped write this section of code */
+canvas { /* Brace helped write this section of code */
   color: #ffffff; 
   border: 2px solid #4682B4; 
   border-radius: 5px;        
