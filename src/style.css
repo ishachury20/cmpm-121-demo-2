@@ -48,7 +48,7 @@ h1 {
 }
 
 canvas { /* Brace helped write this section of code */
-  color: #ffffff; 
+  color: #ffffff;  /*added to style.css instead of main.ts */ 
   border: 2px solid #4682B4; 
   border-radius: 5px;        
   box-shadow: 2px 2px 10px #244c6e; 
