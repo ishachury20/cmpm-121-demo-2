@@ -1,10 +1,50 @@
 import "./style.css";
 
+// Used Brace to help understand how to write classes
+
+class MarkerLine {
+    private points: Array<[number, number] | null>; 
+
+    constructor(startX: number, startY: number) {
+        this.points = [[startX, startY]];
+    }
+
+    // adds new set of points to the point array 
+    public drag(x: number, y: number) {
+        this.points.push([x, y]);
+    }
+
+    public display(ctx: CanvasRenderingContext2D) {
+        if (this.points.length > 1) {  // Ensure there are points to draw
+            ctx.beginPath();
+            ctx.strokeStyle = "black"; 
+            ctx.lineWidth = 1;
+
+            // Used Brace to help write this section of code and understand it
+            // This section checks if the value is null or not, and accordingly either creates a new stroke or sets the starting position
+            let isNewStroke = true;
+        
+            for (const point of this.points) {
+                if (point === null) {
+                    isNewStroke = true;
+                } else {
+                    const [x, y] = point; 
+                    if (isNewStroke) {
+                        ctx.moveTo(x, y); // starting point (when not null)
+                        isNewStroke = false;
+                    } else {
+                        ctx.lineTo(x, y); // next point in the array
+                    }
+                }
+            }
+            ctx.stroke();
+            ctx.closePath();
+        }
+    }
+}
+
 const APP_NAME = "Canvas Crafter 🎨";
 const app = document.querySelector<HTMLDivElement>("#app")!;
-
-// document.title = APP_NAME;
-// app.innerHTML = APP_NAME;
 
 const header = document.createElement("h1");
 header.innerText = APP_NAME; 
@@ -21,116 +61,92 @@ board.fillStyle = "#FFFFFF";
 board.fillRect(0, 0, canvas.width, canvas.height); 
 
 let isDrawing = false; 
-let x = 0;
-let y = 0;
+let currentLine: MarkerLine | null = null; 
 
-// Used ChatGPT To generate the points array 
-// Prompt to ChatGPT: what is the syntax for creating an array that holds two numbers in typescript
-// Note: I had to show it my previous code to refine the answers it gave me  
+const points: Array<MarkerLine | null> = []; //array to hold new points (holds all Markerline information)
+const redoStack: Array<MarkerLine | null> = []; //array used to hold previous points (used for undo/redo)
 
-// Use a single array to track all points. A null value indicates the end of a stroke.
-const points: Array<[number, number] | null> = [];
-const redoStack: Array<[number, number] | null> = [];
-
-// Start drawing on mousedown
 canvas.addEventListener("mousedown", (e) => {
-    x = e.offsetX;
-    y = e.offsetY;
+    const x = e.offsetX;
+    const y = e.offsetY;
     isDrawing = true;
-    points.push([x, y]); 
+    currentLine = new MarkerLine(x, y); // array used for capturing recent points user drew (points holds all, currentLine holds most recent) 
+    points.push(currentLine); 
     redoStack.length = 0; 
     drawingChangedEvent();
 });
 
-// Track mouse movement while drawing
-// Used ChatGPT to help write this function in particular 
-// Prompt to ChatGPT: help me track mouse movement when drawing by capturing movement using an array
-// Note: I had to give ChatGPT my code for it to fully understand the prompt, and provide functional answers 
-// Used Brace to further understand and break down the code 
+// Used Brace to create this section of code and understand it
+// This section of code adds to the currentline array and goes through the drag function (in the Markerline class)
+// The drag method tracks each set of points (so there is no need to store the values in another set of variables) 
 canvas.addEventListener("mousemove", (e) => {
-  if (isDrawing) {
-    points.push([e.offsetX, e.offsetY]); 
-    drawLine(board, x, y, e.offsetX, e.offsetY);
-    drawingChangedEvent(); 
-    x = e.offsetX; 
-    y = e.offsetY;
-  }
-});
+    if (isDrawing && currentLine) {
+      currentLine.drag(e.offsetX, e.offsetY); 
+      drawingChangedEvent(); 
+    }
+  });
 
 canvas.addEventListener("mouseup", () => {
   if (isDrawing) {
-    points.push(null); // Null is used to indicate when the player isn't pressing down
+    currentLine = null;
     drawingChangedEvent();
     isDrawing = false;
   }
 });
 
-function drawLine(board: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) {
-    board.beginPath(); 
-    board.strokeStyle = "black";
-    board.lineWidth = 1;
-    board.moveTo(x1, y1);
-    board.lineTo(x2, y2);
-    board.stroke();
-    board.closePath();
-}
-
 function drawingChangedEvent() {
     const event = new Event("drawing-changed");
-    canvas.dispatchEvent(event); // searched documentation for syntax
+    canvas.dispatchEvent(event);
 }
 
+// Used Brace to help write and understand this code
+// Clear the board, and then for each point in the points array, use the display function to create a line (visually showing them)
 canvas.addEventListener("drawing-changed", () => {
     board.clearRect(0, 0, canvas.width, canvas.height);
     board.fillStyle = "#FFFFFF";
     board.fillRect(0, 0, canvas.width, canvas.height);
 
-    let lastPoint: [number, number] | null = null;
-
-    // Used Brace to help brainstorm on how to handle this
     for (const point of points) {
-      if (point === null) {
-        lastPoint = null;
-      } else {
-        if (lastPoint !== null) {
-          drawLine(board, lastPoint[0], lastPoint[1], point[0], point[1]);
+        if (point !== null) {
+            point.display(board); 
         }
-        lastPoint = point;
-      }
     }
-  });
+});
+
+// Went to Bahar's office hours to talk about redoStack and understand its logic 
+// Used Brace to check conditions (whether the lastpoint was null or contained something)
 
 const undoAllButton = document.createElement("button"); 
 undoAllButton.innerHTML = "Undo All Edits"; 
-undoAllButton.style.margin = "10px";
+undoAllButton.style.margin = "1px";
 
 // Brace helped write this code
 undoAllButton.onclick = () => {
     board.clearRect(0, 0, canvas.width, canvas.height);
     board.fillStyle = "#FFFFFF";
     board.fillRect(0, 0, canvas.width, canvas.height);
+
+    points.length = 0; // Used Brace to add this line and set array length to 0 (clearing the array)
 }
 
-// Went to Bahar's office hours to talk about redoStack and understand it's logic
-// Used Brace to check conditions (whether the lastpoint was null or contained something)
 const undoButton = document.createElement("button");
 undoButton.innerHTML = "Undo Edits";
 undoButton.style.margin = "1px";
 
 undoButton.onclick = () => {
   if (points.length > 0) {
-    const lastPoint = points.pop(); // delete numbers at the top of the array 
-    if(lastPoint !== undefined){
+    const lastPoint = points.pop();
+    if (lastPoint !== undefined) {
         redoStack.push(lastPoint);  
         drawingChangedEvent();
     }
   }
 };
 
-// Similar logic to undoButton 
+// Similar logic to undoButton
 const redoButton = document.createElement("button");
 redoButton.innerHTML = "Redo Edits";
-redoButton.style.margin = "10px";
+redoButton.style.margin = "1px";
 
 redoButton.onclick = () => {
   if (redoStack.length > 0) {
@@ -142,6 +158,6 @@ redoButton.onclick = () => {
   }
 };
 
-app.append(undoAllButton);
+app.append(undoAllButton); 
 app.append(undoButton); 
 app.append(redoButton); 
