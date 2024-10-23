@@ -4,9 +4,11 @@ import "./style.css";
 
 class MarkerLine {
     private points: Array<[number, number] | null>; 
+    private lineWidth: number; 
 
-    constructor(startX: number, startY: number) {
+    constructor(startX: number, startY: number, lineWidth: number = 1) {
         this.points = [[startX, startY]];
+        this.lineWidth = lineWidth;
     }
 
     // adds new set of points to the point array 
@@ -18,7 +20,7 @@ class MarkerLine {
         if (this.points.length > 1) {  // Ensure there are points to draw
             ctx.beginPath();
             ctx.strokeStyle = "black"; 
-            ctx.lineWidth = 1;
+            ctx.lineWidth = this.lineWidth; 
 
             // Used Brace to help write this section of code and understand it
             // This section checks if the value is null or not, and accordingly either creates a new stroke or sets the starting position
@@ -61,6 +63,7 @@ board.fillStyle = "#FFFFFF";
 board.fillRect(0, 0, canvas.width, canvas.height); 
 
 let isDrawing = false; 
+let currentLineWidth = 1;
 let currentLine: MarkerLine | null = null; 
 
 const points: Array<MarkerLine | null> = []; //array to hold new points (holds all Markerline information)
@@ -70,7 +73,7 @@ canvas.addEventListener("mousedown", (e) => {
     const x = e.offsetX;
     const y = e.offsetY;
     isDrawing = true;
-    currentLine = new MarkerLine(x, y); // array used for capturing recent points user drew (points holds all, currentLine holds most recent) 
+    currentLine = new MarkerLine(x, y, currentLineWidth); // array used for capturing recent points user drew (points holds all, currentLine holds most recent) 
     points.push(currentLine); 
     redoStack.length = 0; 
     drawingChangedEvent();
@@ -92,6 +95,15 @@ canvas.addEventListener("mouseup", () => {
     drawingChangedEvent();
     isDrawing = false;
   }
+});
+
+// In your mousedown event
+canvas.addEventListener("mousedown", (e) => {
+    isDrawing = true;
+    const currentLine = new MarkerLine(e.offsetX, e.offsetY, currentLineWidth); // Use the globally set thickness
+    points.push(currentLine);
+    redoStack.length = 0;
+    drawingChangedEvent();
 });
 
 function drawingChangedEvent() {
@@ -157,6 +169,28 @@ redoButton.onclick = () => {
     }
   }
 };
+
+const thinLineButton = document.createElement("button");
+thinLineButton.innerHTML = "Thin";
+
+thinLineButton.onclick = () => {
+    currentLineWidth = 1;  // Example value for thin line
+};
+
+
+const thickLineButton = document.createElement("button");
+thickLineButton.innerHTML = "Thick";
+
+thickLineButton.onclick = () => {
+    currentLineWidth = 3;  // Example value for thick line
+};
+
+app.append(thinLineButton);
+app.append(thickLineButton);
+
+
+app.append(thinLineButton);
+app.append(thickLineButton);
 
 app.append(undoAllButton); 
 app.append(undoButton); 
