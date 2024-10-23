@@ -93,6 +93,13 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* Used ChatGPT to write this section */ 
+/* Prompt: help me write code in css that changes color based on what the user selects */ 
+.selectedTool {
+  background-color: #d0e6ff; /* Light blue indicates selection */
+  border: 2px solid #007bff; /* Blue border for emphasis */
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

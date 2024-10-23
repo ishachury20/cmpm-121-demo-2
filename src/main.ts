@@ -22,8 +22,6 @@ class MarkerLine {
             ctx.strokeStyle = "black"; 
             ctx.lineWidth = this.lineWidth; 
 
-            // Used Brace to help write this section of code and understand it
-            // This section checks if the value is null or not, and accordingly either creates a new stroke or sets the starting position
             let isNewStroke = true;
         
             for (const point of this.points) {
@@ -45,6 +43,39 @@ class MarkerLine {
     }
 }
 
+// Used Brace to help write and understand this class
+// The class takes in the size of the line, and the x and y position of the cursor 
+// It uses the update method to track their recent position, while draw focuses on creating a circle to follow the cursor  
+class ToolPreview {
+    private x: number = 0;
+    private y: number = 0;
+    private size: number;
+
+    constructor(size: number) {
+        this.size = size;
+    }
+
+    updatePosition(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+    }
+
+    draw(ctx: CanvasRenderingContext2D) {
+        if (this.x != null && this.y != null) {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 3; // default 
+            ctx.stroke();
+            ctx.closePath();
+        }
+    }
+}
+
+// Please note: I used Brace a lot for the ToolPreview class (getting a lot of the code from it) because I had the visibility set too low to actually see it
+// I had pre-existing code before I asked Brace to help me write so much of it
+// I figured this out much later, but it mostly ended up being similar (and I made sure to ask a lot of non-code questions to understand what I was doing)
+
 const APP_NAME = "Canvas Crafter 🎨";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
@@ -65,6 +96,7 @@ board.fillRect(0, 0, canvas.width, canvas.height);
 let isDrawing = false; 
 let currentLineWidth = 1;
 let currentLine: MarkerLine | null = null; 
+let toolPreview: ToolPreview | null = new ToolPreview(currentLineWidth);
 
 const points: Array<MarkerLine | null> = []; //array to hold new points (holds all Markerline information)
 const redoStack: Array<MarkerLine | null> = []; //array used to hold previous points (used for undo/redo)
@@ -79,31 +111,31 @@ canvas.addEventListener("mousedown", (e) => {
     drawingChangedEvent();
 });
 
-// Used Brace to create this section of code and understand it
-// This section of code adds to the currentline array and goes through the drag function (in the Markerline class)
-// The drag method tracks each set of points (so there is no need to store the values in another set of variables) 
 canvas.addEventListener("mousemove", (e) => {
-    if (isDrawing && currentLine) {
-      currentLine.drag(e.offsetX, e.offsetY); 
-      drawingChangedEvent(); 
-    }
-  });
+    const x = e.offsetX; 
+    const y = e.offsetY;
+    
+    if (!isDrawing && toolPreview) {
+        toolPreview.updatePosition(x, y);
+        toolMovedEvent(); // call this event so that when the mouse moves, you get a circle following it
 
-canvas.addEventListener("mouseup", () => {
-  if (isDrawing) {
-    currentLine = null;
-    drawingChangedEvent();
-    isDrawing = false;
-  }
+    } else if (isDrawing && currentLine) { // Brace helped me fix some logic on this part
+        currentLine.drag(x, y);
+        drawingChangedEvent();  
+    }
 });
 
-// In your mousedown event
-canvas.addEventListener("mousedown", (e) => {
-    isDrawing = true;
-    const currentLine = new MarkerLine(e.offsetX, e.offsetY, currentLineWidth); // Use the globally set thickness
-    points.push(currentLine);
-    redoStack.length = 0;
-    drawingChangedEvent();
+canvas.addEventListener("mouseup", () => {
+    if (isDrawing) {
+        currentLine = null;
+        drawingChangedEvent();
+        isDrawing = false;
+    }
+});
+
+canvas.addEventListener("mouseleave", () => {
+    toolPreview = null;  
+    redrawCanvas();  // Used ChatGPT to help use redrawcanvas instead of just clearing the board 
 });
 
 function drawingChangedEvent() {
@@ -111,34 +143,50 @@ function drawingChangedEvent() {
     canvas.dispatchEvent(event);
 }
 
-// Used Brace to help write and understand this code
-// Clear the board, and then for each point in the points array, use the display function to create a line (visually showing them)
-canvas.addEventListener("drawing-changed", () => {
+function toolMovedEvent() {
+    const event = new Event("tool-moved");
+    canvas.dispatchEvent(event);
+}
+
+// Helper function to redraw the entire canvas and existing lines
+function redrawCanvas() {
+    // Clear the entire canvas
     board.clearRect(0, 0, canvas.width, canvas.height);
     board.fillStyle = "#FFFFFF";
     board.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Redraw existing lines
     for (const point of points) {
         if (point !== null) {
-            point.display(board); 
+            point.display(board);
         }
+    }
+}
+
+// Brace helped me re-write this code
+canvas.addEventListener("drawing-changed", () => {
+    redrawCanvas();
+});
+
+
+canvas.addEventListener("tool-moved", () => {
+    if (toolPreview) {
+        redrawCanvas();
+        toolPreview.draw(board);
     }
 });
 
-// Went to Bahar's office hours to talk about redoStack and understand its logic 
-// Used Brace to check conditions (whether the lastpoint was null or contained something)
-
+// Undo all edits
 const undoAllButton = document.createElement("button"); 
 undoAllButton.innerHTML = "Undo All Edits"; 
 undoAllButton.style.margin = "1px";
 
-// Brace helped write this code
 undoAllButton.onclick = () => {
     board.clearRect(0, 0, canvas.width, canvas.height);
     board.fillStyle = "#FFFFFF";
     board.fillRect(0, 0, canvas.width, canvas.height);
 
-    points.length = 0; // Used Brace to add this line and set array length to 0 (clearing the array)
+    points.length = 0; // clear the array
 }
 
 const undoButton = document.createElement("button");
@@ -150,12 +198,12 @@ undoButton.onclick = () => {
     const lastPoint = points.pop();
     if (lastPoint !== undefined) {
         redoStack.push(lastPoint);  
-        drawingChangedEvent();
     }
+    drawingChangedEvent();
   }
 };
 
-// Similar logic to undoButton
+// Redo edits
 const redoButton = document.createElement("button");
 redoButton.innerHTML = "Redo Edits";
 redoButton.style.margin = "1px";
@@ -165,33 +213,31 @@ redoButton.onclick = () => {
     const redoPoint = redoStack.pop();
     if (redoPoint !== undefined) {
       points.push(redoPoint); 
-      drawingChangedEvent();
     }
+    drawingChangedEvent();
   }
 };
+
 
 const thinLineButton = document.createElement("button");
 thinLineButton.innerHTML = "Thin";
 
 thinLineButton.onclick = () => {
-    currentLineWidth = 1;  // Example value for thin line
+    currentLineWidth = 3;  
+    toolPreview = new ToolPreview(currentLineWidth); 
 };
 
-
+// Thick line option
 const thickLineButton = document.createElement("button");
 thickLineButton.innerHTML = "Thick";
 
 thickLineButton.onclick = () => {
-    currentLineWidth = 3;  // Example value for thick line
+    currentLineWidth = 7;  // Example value for thick line// Update tool preview size
 };
-
-app.append(thinLineButton);
-app.append(thickLineButton);
-
 
 app.append(thinLineButton);
 app.append(thickLineButton);
 
 app.append(undoAllButton); 
 app.append(undoButton); 
-app.append(redoButton); 
+app.append(redoButton);
