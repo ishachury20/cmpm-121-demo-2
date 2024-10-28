@@ -125,9 +125,6 @@ class StickerCommand {
         points.push(new StickerCommand(x, y, this.sticker, this.rotation));
     }
     public display(ctx: CanvasRenderingContext2D) {
-        // ctx.font = '40px serif';
-        // ctx.fillStyle = "black"; 
-        // ctx.fillText(this.sticker, this.x, this.y, this.rotation);
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.rotation);
@@ -157,6 +154,8 @@ board.fillRect(0, 0, canvas.width, canvas.height);
 let isDrawing = false;
 let currentLineWidth = 1;
 
+// Used ChatGPT to create labels for colorslider and rotation
+ 
 const colorLabel = document.createElement("label");
 colorLabel.innerText = "Color:";
 colorLabel.htmlFor = "colorSlider";
@@ -415,6 +414,10 @@ exportButton.addEventListener("click", () => { //largely followed documentation 
     });
 });
 
+// logic created/written by ChatGPT 
+// I entered some intial code about the color slider and inputted it into the program 
+// It gave me this section of code (that was refined after some questions about how my code worked in general)
+
 const rotationSlider = document.createElement("input");
 rotationSlider.type = "range";
 rotationSlider.min = "0";
@@ -433,13 +436,6 @@ rotationSlider.addEventListener("input", () => {
 
 });
 app.append(rotationSlider);
-
-// app.append(exportButton);
-// app.append(thinLineButton);
-// app.append(thickLineButton);
-// app.append(undoAllButton);
-// app.append(undoButton);
-// app.append(redoButton);
 
 actionButtonRow.append(undoAllButton, undoButton, redoButton); 
 lineButtonRow.append(thinLineButton, thickLineButton, exportButton); 
