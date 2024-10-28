@@ -57,6 +57,7 @@ class ToolPreview {
     draw(ctx: CanvasRenderingContext2D) { // Used documentation to understand this
         if (this.sticker) {
             ctx.font = `${this.size}px serif`;
+            ctx.fillStyle = "red";
             ctx.fillText(this.sticker, this.x, this.y);
         } else {
             ctx.beginPath();
@@ -67,6 +68,7 @@ class ToolPreview {
             ctx.closePath();
         }
     }
+    
 }
 
 // Please note: I used Brace a lot for the ToolPreview class (getting a lot of the code from it) because I had the visibility set too low to actually see it
@@ -93,6 +95,7 @@ class StickerCommand {
     }
     public display(ctx: CanvasRenderingContext2D) {
         ctx.font = '40px serif';
+        ctx.fillStyle = "black"; 
         ctx.fillText(this.sticker, this.x, this.y);
     }
 }
@@ -208,36 +211,39 @@ function toolMovedEvent() {
 // Brace was used to help create the clearStickerMode function and the isStickerActive boolean 
 // These were because when the sticker preview disappeared after the user clicked the board
 
-const sticker1Button = document.createElement("button");
-sticker1Button.innerText = "🌟";
-sticker1Button.onclick = () => {
-    toolPreview = new ToolPreview(40, "🌟"); // gives the user a preview of the sticker 
-    currentSticker = new StickerCommand(0, 0, "🌟"); // creates and adds it to the array 
-    isStickerActive = true; 
-    redrawCanvas();
-};
 
-const sticker2Button = document.createElement("button");
-sticker2Button.innerText = "🔥";
-sticker2Button.onclick = () => {
-    toolPreview = new ToolPreview(40, "🔥");
-    currentSticker = new StickerCommand(0, 0, "🔥");
+// Used Brace to suggest similar code and edited it to suit this assignment 
+
+const buttonIds = ["🌟", "🔥", "😭"];
+buttonIds.forEach(emoji => createStickerButton(emoji));
+
+// Function to handle sticker activation
+function handleButtonClick(stickerContent: string) {
+    toolPreview = new ToolPreview(40, stickerContent);
+    currentSticker = new StickerCommand(0, 0, stickerContent);
     isStickerActive = true;
     redrawCanvas();
-};
+}
 
-const sticker3Button = document.createElement("button");
-sticker3Button.innerText = "😭";
-sticker3Button.onclick = () => {
-    toolPreview = new ToolPreview(40, "😭");
-    currentSticker = new StickerCommand(0, 0, "😭");
-    isStickerActive = true;
-    redrawCanvas();
-};
+// Function to create a sticker button
+function createStickerButton(stickerContent: string) {
+    const buttonElement = document.createElement("button");
+    buttonElement.innerText = stickerContent;
+    buttonElement.addEventListener("click", () => handleButtonClick(stickerContent));
+    app.append(buttonElement);
+}
 
-app.appendChild(sticker1Button);
-app.appendChild(sticker2Button);
-app.appendChild(sticker3Button);
+// Button to prompt for a custom sticker
+const customStickerButton = document.createElement("button");
+customStickerButton.innerText = "Custom Sticker";
+customStickerButton.addEventListener("click", () => {
+    const customSticker = prompt("Enter a custom sticker or text:", "✨");
+    if (customSticker && customSticker.trim()) {  // Use Brace to help write this
+        createStickerButton(customSticker); 
+        handleButtonClick(customSticker); 
+    }
+});
+app.append(customStickerButton); 
 
 const undoAllButton = document.createElement("button");
 undoAllButton.innerHTML = "Undo All Edits";
