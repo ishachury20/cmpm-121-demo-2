@@ -157,7 +157,7 @@ let currentLineWidth = 1;
 // Used ChatGPT to create labels for colorslider and rotation
  
 const colorLabel = document.createElement("label");
-colorLabel.innerText = "Color:";
+colorLabel.innerText = "Color";
 colorLabel.htmlFor = "colorSlider";
 app.append(colorLabel);
 
@@ -181,7 +181,7 @@ colorSlider.addEventListener("input", () => {
 app.append(colorSlider);
 
 const rotationLabel = document.createElement("label");
-rotationLabel.innerText = "Rotation:";
+rotationLabel.innerText = "Rotation";
 rotationLabel.htmlFor = "rotationSlider";
 app.append(rotationLabel);
 
