@@ -298,8 +298,47 @@ thickLineButton.onclick = () => {
     toolPreview = new ToolPreview(currentLineWidth * 5, null);
 };
 
+const exportButton = document.createElement("button");
+exportButton.innerText = "Export";
+exportButton.addEventListener("click", () => { //largely followed documentation for this section
+
+    const exportCanvas = document.createElement("canvas"); 
+    exportCanvas.width = 1024;
+    exportCanvas.height = 1024;
+    const exportCtx = exportCanvas.getContext("2d")!;
+    
+    exportCtx.scale(4, 4); 
+    exportCtx.fillStyle = "#FFFFFF";
+    exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+    
+    // Add all points in the array to be exported (keep the board as-is)
+    for (const point of points) {
+        if (point !== null) {
+            point.display(exportCtx);
+        }
+    }
+    
+    // Used Brace to help write this 
+    // toBlob creates a url to download the canvas
+    // a/href make to possible to download and covert to a png
+    exportCanvas.toBlob((blob) => {
+        if (blob) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "canvas_crafter.png";
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    });
+});
+
+app.append(exportButton);
+
+
 app.append(thinLineButton);
 app.append(thickLineButton);
 app.appendChild(undoAllButton);
 app.appendChild(undoButton);
 app.appendChild(redoButton);
+app.append(exportButton); 
