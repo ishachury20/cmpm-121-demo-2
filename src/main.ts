@@ -68,29 +68,29 @@ class ToolPreview {
     }
 
     draw(ctx: CanvasRenderingContext2D) {
-        if (this.sticker) {
-            ctx.save();
-            
-            ctx.translate(this.x, this.y);
-            ctx.rotate(this.rotation);
-    
-            ctx.font = '40px serif'; // Set the font size to match StickerCommand
-            ctx.fillStyle = "black";
-    
-            const textWidth = ctx.measureText(this.sticker).width;
-            ctx.fillText(this.sticker, -textWidth / 2, this.size / 4);
-    
-            ctx.restore();
-        } else {
-            // Circle preview for drawing mode
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
-            ctx.strokeStyle = "black";
-            ctx.lineWidth = 1;
-            ctx.stroke();
-            ctx.closePath();
-        }
+    if (this.sticker) {
+        ctx.save();
+        
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+
+        ctx.font = '40px serif'; // Set the font size to match StickerCommand
+        ctx.fillStyle = "black";
+
+        const textWidth = ctx.measureText(this.sticker).width;
+        ctx.fillText(this.sticker, -textWidth / 2, this.size / 4);
+
+        ctx.restore();
+    } else {
+        // Circle preview for drawing mode
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.closePath();
     }
+}
     
 }
 
