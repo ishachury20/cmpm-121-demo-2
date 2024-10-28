@@ -5,17 +5,22 @@ import "./style.css";
 class MarkerLine {
     private points: Array<[number, number] | null>;
     private lineWidth: number;
-    constructor(startX: number, startY: number, lineWidth: number = 1) {
+    private color: string;
+
+    constructor(startX: number, startY: number, lineWidth: number = 1, color: string = "black") {
         this.points = [[startX, startY]];
         this.lineWidth = lineWidth;
+        this.color = color;
     }
+
     public drag(x: number, y: number) {
         this.points.push([x, y]);
     }
+
     public display(ctx: CanvasRenderingContext2D) {
         if (this.points.length > 1) {
             ctx.beginPath();
-            ctx.strokeStyle = "black";
+            ctx.strokeStyle = this.color;
             ctx.lineWidth = this.lineWidth;
             let isNewStroke = true;
             for (const point of this.points) {
@@ -24,10 +29,10 @@ class MarkerLine {
                 } else {
                     const [x, y] = point;
                     if (isNewStroke) {
-                        ctx.moveTo(x, y); // starting point (when not null)
+                        ctx.moveTo(x, y);
                         isNewStroke = false;
                     } else {
-                        ctx.lineTo(x, y); // next point in the array 
+                        ctx.lineTo(x, y);
                     }
                 }
             }
@@ -46,19 +51,37 @@ class ToolPreview {
     private y: number = 0;
     private size: number;
     private sticker: string | null = null;
+    private rotation: number = 0; 
+    
     constructor(size: number, sticker: string | null = null) {
         this.size = size;
         this.sticker = sticker;
     }
+
     updatePosition(x: number, y: number) {
         this.x = x;
         this.y = y;
     }
-    draw(ctx: CanvasRenderingContext2D) { // Used documentation to understand this
+
+    setRotation(angle: number) {
+        this.rotation = angle;  // Update rotation angle
+    }
+
+    draw(ctx: CanvasRenderingContext2D) {
         if (this.sticker) {
-            ctx.font = `${this.size}px serif`;
-            ctx.fillStyle = "red";
-            ctx.fillText(this.sticker, this.x, this.y);
+            ctx.save();
+            
+            // Move to the middle of the emoji's intended location
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
+            
+            // Calculate textWidth to center
+            const textWidth = ctx.measureText(this.sticker).width;
+    
+            // Draw the sticker at (0, 0) after translation
+            ctx.fillText(this.sticker, -textWidth / 2, this.size / 4); // Adjust vertical position if needed
+            
+            ctx.restore();
         } else {
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
@@ -83,20 +106,35 @@ class StickerCommand {
     private x: number;
     private y: number;
     sticker: string;
-    constructor(x: number, y: number, sticker: string) {
+    private rotation: number; 
+
+    constructor(x: number, y: number, sticker: string, rotation: number) {
         this.x = x;
         this.y = y;
         this.sticker = sticker;
+        this.rotation = rotation; 
     }
+
+    public setRotation(rotation: number) {
+        this.rotation = rotation;
+    }
+
     public place(x: number, y: number, points: Array<MarkerLine | StickerCommand | null>) {
         this.x = x;
         this.y = y;
-        points.push(new StickerCommand(x, y, this.sticker));
+        points.push(new StickerCommand(x, y, this.sticker, this.rotation));
     }
     public display(ctx: CanvasRenderingContext2D) {
+        // ctx.font = '40px serif';
+        // ctx.fillStyle = "black"; 
+        // ctx.fillText(this.sticker, this.x, this.y, this.rotation);
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
         ctx.font = '40px serif';
-        ctx.fillStyle = "black"; 
-        ctx.fillText(this.sticker, this.x, this.y);
+        ctx.fillStyle = "black";
+        ctx.fillText(this.sticker, 0, 0);
+        ctx.restore();
     }
 }
 
@@ -118,6 +156,35 @@ board.fillRect(0, 0, canvas.width, canvas.height);
 
 let isDrawing = false;
 let currentLineWidth = 1;
+
+const colorLabel = document.createElement("label");
+colorLabel.innerText = "Color:";
+colorLabel.htmlFor = "colorSlider";
+app.append(colorLabel);
+
+// Used ChatGPT to write the color slider logic 
+// Prompt given: I asked it to help refine my intial code (which was based on the rotation slider and edited)
+// I had to refine my prompts and give it a label so the sliders would be easier to differentiate
+
+const colorSlider = document.createElement("input");
+colorSlider.id = "colorSlider"; // Add id for label reference
+colorSlider.type = "range";
+colorSlider.min = "0";
+colorSlider.max = "360";
+colorSlider.value = "0";
+colorSlider.style.width = "100px";
+colorSlider.style.background = "linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red)";
+
+let currentLineColor = `hsl(${colorSlider.value}, 100%, 50%)`;
+colorSlider.addEventListener("input", () => {
+    currentLineColor = `hsl(${colorSlider.value}, 100%, 50%)`;
+});
+app.append(colorSlider);
+
+const rotationLabel = document.createElement("label");
+rotationLabel.innerText = "Rotation:";
+rotationLabel.htmlFor = "rotationSlider";
+app.append(rotationLabel);
 
 // Brace helped write parts of these variables 
 
@@ -147,13 +214,13 @@ canvas.addEventListener("mousedown", (e) => {
     const y = e.offsetY;
     if (!isStickerActive) {
         isDrawing = true;
-        currentLine = new MarkerLine(x, y, currentLineWidth);
+        currentLine = new MarkerLine(x, y, currentLineWidth, currentLineColor); // Use current color
         points.push(currentLine);
     } else if (isStickerActive && currentSticker) {
-        currentSticker.place(x, y, points); // add the sticker in this location 
-        drawingChangedEvent(); // indicate the board has changed 
+        currentSticker.place(x, y, points);
+        drawingChangedEvent();
     }
-    redoStack.length = 0; 
+    redoStack.length = 0;
 });
 
 canvas.addEventListener("mousemove", (e) => {
@@ -233,7 +300,8 @@ buttonIds.forEach(emoji => {
 // Function to handle sticker activation
 function handleButtonClick(stickerContent: string) {
     toolPreview = new ToolPreview(40, stickerContent);
-    currentSticker = new StickerCommand(0, 0, stickerContent);
+    const rotationAngle = parseInt(rotationSlider.value); 
+    currentSticker = new StickerCommand(0, 0, stickerContent, rotationAngle);
     isStickerActive = true;
     redrawCanvas();
 }
@@ -346,6 +414,25 @@ exportButton.addEventListener("click", () => { //largely followed documentation 
         }
     });
 });
+
+const rotationSlider = document.createElement("input");
+rotationSlider.type = "range";
+rotationSlider.min = "0";
+rotationSlider.max = "360";
+rotationSlider.value = "0";
+rotationSlider.style.width = "100px";
+rotationSlider.addEventListener("input", () => {
+    const angle = parseInt(rotationSlider.value, 10) * (Math.PI / 180); // Convert to radians
+    if (currentSticker) {
+        currentSticker.setRotation(angle);
+        toolPreview = new ToolPreview(40, currentSticker.sticker); // Update preview rotation
+        
+    }
+    toolPreview.setRotation(angle);
+    redrawCanvas();
+
+});
+app.append(rotationSlider);
 
 // app.append(exportButton);
 // app.append(thinLineButton);
