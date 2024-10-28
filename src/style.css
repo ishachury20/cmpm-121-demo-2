@@ -47,11 +47,23 @@ h1 {
   text-align: center;
 }
 
+#app div {
+  display: flex;
+  gap: 8px;                  /* Space between buttons */
+  margin-bottom: 10px;       /* Space between rows */
+  justify-content: flex-start; /* Align buttons to the start of row */
+}
+
+#app div#emojiRow {
+  gap: 12px;                 /* Larger gap for emoji row, if needed */
+}
+
+
 canvas { /* Brace helped write this section of code */
   color: #ffffff;  /*added to style.css instead of main.ts */ 
-  border: 2px solid #4682B4; 
-  border-radius: 5px;        
-  box-shadow: 2px 2px 10px #244c6e; 
+  border: 2px solid #d19558; 
+  border-radius: 3px;        
+  box-shadow: 2px 2px 10px #d4a461; 
 }
 
 .logo {
@@ -83,21 +95,39 @@ button {
   font-family: inherit;
   background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 button:hover {
-  border-color: #646cff;
+  border-color: #474747;
+  transform: translateY(-2px);
 }
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+.emoji-button {
+  display: flex;          /* Use Flexbox to help with centering */
+  align-items: center;    /* Vertically center the content */
+  justify-content: center;/* Horizontally center the content */
+  width: 80px;            /* Button width */
+  height: 80px;           /* Button height */
+  font-size: 30px;        /* Font size for emojis */
+  border-radius: 15px;    /* Rounded corners */
+  margin: 10px;           /* Space between buttons */
+  cursor: pointer;        /* Pointer on hover */
+  transition: transform 0.2s ease, background-color 0.2s ease; /* Transition effects */
+}
+
+.emoji-button:hover {
+  transform: scale(0.75);        /* Slight enlargement on hover */
+}
+
 /* Used ChatGPT to write this section */ 
 /* Prompt: help me write code in css that changes color based on what the user selects */ 
 .selectedTool {
-  background-color: #d0e6ff; /* Light blue indicates selection */
-  border: 2px solid #007bff; /* Blue border for emphasis */
+  background-color: #fcffd0; /* Light blue indicates selection */
+  border: 2px solid #ffae00; /* Blue border for emphasis */
 }
 
 @media (prefers-color-scheme: light) {

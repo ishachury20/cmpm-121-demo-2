@@ -115,6 +115,7 @@ app.appendChild(canvas);
 const board = canvas.getContext("2d")!;
 board.fillStyle = "#FFFFFF";
 board.fillRect(0, 0, canvas.width, canvas.height);
+
 let isDrawing = false;
 let currentLineWidth = 1;
 
@@ -128,6 +129,12 @@ let isStickerActive = false;
 const points: Array<MarkerLine | StickerCommand | null> = []; // array to hold new points (holds all Markerline information)
 const redoStack: Array<MarkerLine | StickerCommand | null> = []; // array used to hold previous points (used for undo/redo)
 
+const emojiRow = document.createElement("div");
+const customStickerRow = document.createElement("div");
+const actionButtonRow = document.createElement("div");
+const lineButtonRow = document.createElement("div"); 
+
+app.append(emojiRow, customStickerRow, actionButtonRow);
 
 function clearStickerMode() {
     isStickerActive = false;
@@ -214,8 +221,14 @@ function toolMovedEvent() {
 
 // Used Brace to suggest similar code and edited it to suit this assignment 
 
-const buttonIds = ["🌟", "🔥", "😭"];
-buttonIds.forEach(emoji => createStickerButton(emoji));
+const buttonIds = ["🐶", "🐷", "🐣"];
+buttonIds.forEach(emoji => {
+    const buttonElement = document.createElement("button");
+    buttonElement.className = "emoji-button"; // Assign a class for styling
+    buttonElement.innerText = emoji;
+    buttonElement.addEventListener("click", () => handleButtonClick(emoji));
+    emojiRow.append(buttonElement); 
+});
 
 // Function to handle sticker activation
 function handleButtonClick(stickerContent: string) {
@@ -230,7 +243,7 @@ function createStickerButton(stickerContent: string) {
     const buttonElement = document.createElement("button");
     buttonElement.innerText = stickerContent;
     buttonElement.addEventListener("click", () => handleButtonClick(stickerContent));
-    app.append(buttonElement);
+    customStickerRow.append(buttonElement);
 }
 
 // Button to prompt for a custom sticker
@@ -238,12 +251,13 @@ const customStickerButton = document.createElement("button");
 customStickerButton.innerText = "Custom Sticker";
 customStickerButton.addEventListener("click", () => {
     const customSticker = prompt("Enter a custom sticker or text:", "✨");
-    if (customSticker && customSticker.trim()) {  // Use Brace to help write this
+    if (customSticker && customSticker.trim()) {
         createStickerButton(customSticker); 
         handleButtonClick(customSticker); 
     }
 });
-app.append(customStickerButton); 
+customStickerRow.append(customStickerButton);
+// app.append(customStickerButton); 
 
 const undoAllButton = document.createElement("button");
 undoAllButton.innerHTML = "Undo All Edits";
@@ -333,12 +347,15 @@ exportButton.addEventListener("click", () => { //largely followed documentation 
     });
 });
 
-app.append(exportButton);
+// app.append(exportButton);
+// app.append(thinLineButton);
+// app.append(thickLineButton);
+// app.append(undoAllButton);
+// app.append(undoButton);
+// app.append(redoButton);
+
+actionButtonRow.append(undoAllButton, undoButton, redoButton); 
+lineButtonRow.append(thinLineButton, thickLineButton, exportButton); 
 
 
-app.append(thinLineButton);
-app.append(thickLineButton);
-app.appendChild(undoAllButton);
-app.appendChild(undoButton);
-app.appendChild(redoButton);
-app.append(exportButton); 
+app.append(emojiRow, customStickerRow, actionButtonRow, lineButtonRow);
