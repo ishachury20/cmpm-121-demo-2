@@ -51,11 +51,13 @@ class ToolPreview {
     private y: number = 0;
     private size: number;
     private sticker: string | null = null;
+    private color: string = "black"
     private rotation: number = 0; 
     
-    constructor(size: number, sticker: string | null = null) {
+    constructor(size: number, sticker: string | null = null, color: string) {
         this.size = size;
         this.sticker = sticker;
+        this.color = color;
     }
 
     updatePosition(x: number, y: number) {
@@ -67,6 +69,10 @@ class ToolPreview {
         this.rotation = angle;  // Update rotation angle
     }
 
+    setColor(color: string) {
+        this.color = color;
+    }
+
     draw(ctx: CanvasRenderingContext2D) {
     if (this.sticker) {
         ctx.save();
@@ -75,7 +81,7 @@ class ToolPreview {
         ctx.rotate(this.rotation);
 
         ctx.font = '40px serif'; // Set the font size to match StickerCommand
-        ctx.fillStyle = "black";
+        ctx.fillStyle = this.color;
 
         const textWidth = ctx.measureText(this.sticker).width;
         ctx.fillText(this.sticker, -textWidth / 2, this.size / 4);
@@ -85,7 +91,7 @@ class ToolPreview {
         // Circle preview for drawing mode
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
-        ctx.strokeStyle = "black";
+        ctx.strokeStyle = this.color;
         ctx.lineWidth = 1;
         ctx.stroke();
         ctx.closePath();
@@ -106,12 +112,14 @@ class StickerCommand {
     private x: number;
     private y: number;
     sticker: string;
+    color: string = "black"
     private rotation: number; 
 
-    constructor(x: number, y: number, sticker: string, rotation: number) {
+    constructor(x: number, y: number, sticker: string, color: string = "black", rotation: number) {
         this.x = x;
         this.y = y;
         this.sticker = sticker;
+        this.color = color;
         this.rotation = rotation; 
     }
 
@@ -119,17 +127,21 @@ class StickerCommand {
         this.rotation = rotation;
     }
 
+    public setColor(color: string) {
+        this.color = color;
+    }
+
     public place(x: number, y: number, points: Array<MarkerLine | StickerCommand | null>) {
         this.x = x;
         this.y = y;
-        points.push(new StickerCommand(x, y, this.sticker, this.rotation));
+        points.push(new StickerCommand(x, y, this.sticker, this.color, this.rotation));
     }
     public display(ctx: CanvasRenderingContext2D) {
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.rotation);
         ctx.font = '40px serif';
-        ctx.fillStyle = "black";
+        ctx.fillStyle = this.color;
         ctx.fillText(this.sticker, 0, 0);
         ctx.restore();
     }
@@ -177,6 +189,9 @@ colorSlider.style.background = "linear-gradient(to right, red, yellow, lime, cya
 let currentLineColor = `hsl(${colorSlider.value}, 100%, 50%)`;
 colorSlider.addEventListener("input", () => {
     currentLineColor = `hsl(${colorSlider.value}, 100%, 50%)`;
+    toolPreview.setColor(currentLineColor);
+    currentSticker?.setColor(currentLineColor);
+    toolMovedEvent();
 });
 app.append(colorSlider);
 
@@ -188,7 +203,7 @@ app.append(rotationLabel);
 // Brace helped write parts of these variables 
 
 let currentLine: MarkerLine | null = null; // this is the current line being drawn (set to null in the beginning)
-let toolPreview: ToolPreview = new ToolPreview(currentLineWidth * 5, null); // Used for the circle under the cursor 
+let toolPreview: ToolPreview = new ToolPreview(currentLineWidth * 5, null, currentLineColor); // Used for the circle under the cursor 
 let currentSticker: StickerCommand | null = null; // used to hold stickers
 let isStickerActive = false;
 
@@ -205,7 +220,7 @@ app.append(emojiRow, customStickerRow, actionButtonRow);
 function clearStickerMode() {
     isStickerActive = false;
     currentSticker = null;
-    toolPreview = new ToolPreview(currentLineWidth * 5, null); // Reset to line preview
+    toolPreview = new ToolPreview(currentLineWidth * 5, null, currentLineColor); // Reset to line preview
 }
 
 canvas.addEventListener("mousedown", (e) => {
@@ -298,9 +313,9 @@ buttonIds.forEach(emoji => {
 
 // Function to handle sticker activation
 function handleButtonClick(stickerContent: string) {
-    toolPreview = new ToolPreview(40, stickerContent);
+    toolPreview = new ToolPreview(40, stickerContent, currentLineColor);
     const rotationAngle = parseInt(rotationSlider.value); 
-    currentSticker = new StickerCommand(0, 0, stickerContent, rotationAngle);
+    currentSticker = new StickerCommand(0, 0, stickerContent, currentLineColor, rotationAngle);
     isStickerActive = true;
     redrawCanvas();
 }
@@ -368,7 +383,7 @@ thinLineButton.innerHTML = "Thin";
 thinLineButton.onclick = () => {
     clearStickerMode();
     currentLineWidth = 1;
-    toolPreview = new ToolPreview(currentLineWidth * 5, null);
+    toolPreview = new ToolPreview(currentLineWidth * 5, null, currentLineColor);
 };
 
 const thickLineButton = document.createElement("button");
@@ -376,7 +391,7 @@ thickLineButton.innerHTML = "Thick";
 thickLineButton.onclick = () => {
     clearStickerMode();
     currentLineWidth = 3;
-    toolPreview = new ToolPreview(currentLineWidth * 5, null);
+    toolPreview = new ToolPreview(currentLineWidth * 5, null, currentLineColor);
 };
 
 const exportButton = document.createElement("button");
@@ -428,7 +443,7 @@ rotationSlider.addEventListener("input", () => {
     const angle = parseInt(rotationSlider.value, 10) * (Math.PI / 180); // Convert to radians
     if (currentSticker) {
         currentSticker.setRotation(angle);
-        toolPreview = new ToolPreview(40, currentSticker.sticker); // Update preview rotation
+        toolPreview = new ToolPreview(40, currentSticker.sticker, currentLineColor); // Update preview rotation
         
     }
     toolPreview.setRotation(angle);
