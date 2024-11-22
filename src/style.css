@@ -37,7 +37,7 @@ h1 {
 
 #app {
   display: flex;
-  flex-direction: column; /* Brace helped adjust the flex direction */ 
+  flex-direction: column; /* Adjusts the flex direction arranging children from top to bottom */ 
   align-items: center; /* Center all items */
   justify-content: center; 
   gap: 10px;
@@ -59,7 +59,7 @@ h1 {
 }
 
 
-canvas { /* Brace helped write this section of code */
+canvas {
   color: #ffffff;  /*added to style.css instead of main.ts */ 
   border: 2px solid #d19558; 
   border-radius: 3px;        
@@ -120,7 +120,6 @@ button:focus-visible {
 }
 
 
-/* Used ChatGPT to write this section */ 
 /* Prompt: help me write code in css that changes color based on what the user selects */ 
 .selectedTool {
   background-color: #fcffd0; /* Light blue indicates selection */
